@@ -44,4 +44,133 @@
 	SYS, SYSTEM, SCOTT(예제), HR
 	VARCHAR  string과 같은 문자형 
 
+@ SYSTEM
+계정 생성
+// 오라클 12c 이상부터 계정 이름 C## 붙여서 계정 생성해야 한다.
+// C## 제거하기 위한 설정
+
+계정 권한 설정
+명령 > grant 권한명,권한명 to 계정명;
+실습> grant resource, connect to scott;
+	// resource - 테이블, 뷰, 인덱스 생성 권한
+	// connect - 연결, 로그인, SQL 실행, 조회 권한
+	// dba - 계정 생성, 백업, 복구, 관리자 권한
+	commit;
+
+이제 작성은 스캇에서 함
+
+// 계정 삭제
+명령 > drop user 계정명;
+
+// 계정 비밀번호 변경
+명령 > alter user 계정명 identified by 변경 비밀번호;
+
+// 계정 잠금 해제
+명령 > alter user 계정명 identified by 비밀번호 account unlock; 
+> 다 관리자 (시스템)에서 하는것임
+
+// 관리자 계정 비밀번호 변경
+
+* sqlDeveloper에서 불가능
+* 명령 프롬프트(cmd) 로 들어가야함
+명령> sqlplus /nolog
+명령> connect / as sysdba
+명령> alter user system identified by 변경 비밀번호;
+명령> commit;
+
+scott
+
+// 테이블 생성
+명령> create table 테이블명(
+	컬럼명 타입 옵션,
+	컬럼명 타입 옵션,
+	...
+	);
+
+	타입 : number, varchar2(8000), date
+	옵션 : default, primary key(중복되는 값을 쓸 수 없음), not null, check(범위 지정), foreign key(다른 테이블과 연결)
+
+실습>
+create table test(
+    num number primary key,
+    name varchar2(50) not null,
+    addr varchar2(100) default 'aaaaa',	// 문자는 홑따옴표
+    age number default 0 check(age>=0 and age<=100),	// 숫자는 그대로
+    reg date default sysdate
+    );;
+
+// 테이블 컬럼 추가
+명령> alter table 테이블명 add(컬럼명 타입 옵션);
+실습> alter table test add(pw varchar2(100) not null);
+	* 레코드가 하나 이상 있는 경우 옵션 사용에 주의
+	* not null, primary key, 
+
+// 테이블 컬럼명 변경
+명령> alter table 테이블명 rename column 컬럼명 to 변경명;
+실습> alter table test rename column pw to password;
+
+//테이블 컬럼 삭제
+명령 > alter table 테이블명 drop column 컬럼명;
+실습 > alter table test drop column password;
+
+// 테이블 삭제
+명령 > drop table 테이블명;
+실습 > drop table test;
+
+//레코드 추가 (모든 컬럼에 다 넣는 것)
+명령 > insert into 테이블명 values (값,값,값,...);
+실습 > insert into test values(1, 'java', 'seoul', 30, sysdate);	// 컬럼의 순서대로 값을 넣어주면 된다. 문자는 홑따옴표 안에 넣으면 된다.
+	// sysdate 는 현재날짜
+	// 무결성 제약의 위배 : 인서트를 계속하면(?) 뜸. 
+	// table > 데이터를 누르면 레코드가 보인다. 인서트를 추가할 때 프라이머리 키만 달라지지 않으면 된다.
+
+// 레코드 추가 : 원하는 것만 넣고 싶을 때 
+명령 > insert  into 테이블명 (컬럼,컬럼,컬럼...)  values(값,값,값...);
+실습 > insert into test(num,name) values (3,'oracle');	// 주의점: num과 name을 순서에 맞게 넣어야하고 프라이머리키는 바뀌면 안된다.
+
+//컬럼값 수정
+명령 > update 테이블명 set 컬럼명 = 변경값, 컬럼명 = 변경값;
+실습 > update test set age = 50, addr = 'korea';
+실습 > update test set age = 70;		// 컬럼은 하나만 바꿔도 된다.
+
+//컬럼값 수정 / 조건이 있음 (where - 자바로 따지면 if문이랑 같다)
+명령 >  update 테이블명 set 컬럼명 = 변경값 where 조건식;
+
+실습 > update test set age = 20 where name ='java';	// 이름이 자바이면 나이를 20살로 해주겠다. 모든 레코드에서 비교하면서 조건에 만족하면 수정하겠다. 그니까 각 레코드마다 비교하면서 true면 수정한다.
+실습 > update test set age = 40 where num = 3;	// num이 3이면 나이를 40살로. 조건을 primary key랑 비교한 것. 해당 조건에 만족하는 모든 레코드를 수정
+실습 > update test set age = 'seoul' where age >20;
+
+
+// 레코드 삭제
+명령> delete from 테이블명;
+실습> delete from test;
+
+삭제 후 롤백 > rollback;
+
+// 레코드 삭제 / 조건
+명령> delete from 테이블명 where 조건문;
+실습> delete from test where name = 'java';
+실습> delete from test where num = 3;
+
+------------------
+// 검색 (select)
+명령> select 컬럼명, 컬럼명 from 테이블명;	
+실습> select num, name from test; 	> 단순히 조회이기 때문에 컬럼을 검색하는것임. 모든 name은 검색해서 봐야함
+
+
+회원 테이블
+id / pw / name / 통신사 / 번호
+java / 1234 / 'sun' / 1 (통신사를 번호로) / 010-1234-5678
+
+통신사 테이블
+번호 / 이름
+100 / sk
+200/ kt
+300/ u+
+400/ 알뜰
+
+테이블을 두개로 나눠서 확인하는 것임 (따로 보는 이유: 문자로 넣어놓으면 마음대로 막 들어갈 수 있기 때문에)
+>> 참조 관계 (회원 테이블에서 통신사 테이블을 참조하고 있다)
+통신사 테이블에 포링?키를 설정하면 아무거나 못들어가고 해당하는 값만 들어감 ( 500번 불가) > 참조하고 있기 때문에
+> 만약 500번을 넣으려하면 무결성 위배에 걸림 
 
